@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Task Manager</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>My Task Manager</h1>
+        <h2>Organize your day, one task at a time.</h2>
+    </header>
+    <main>
+        <input type="text" id="task-input" placeholder="Enter a task...">
+        <button id="add-task-btn">Add Task</button>
+        <div id="task-list"></div>
+        <div id="filters">
+            <button id="all-btn">All</button>
+            <button id="active-btn">Active</button>
+            <button id="completed-btn">Completed</button>
+        </div>
+        <div id="stats">
+            <p id="total-tasks">Total Tasks: 0</p>
+            <p id="completed-tasks">Completed Tasks: 0</p>
+            <p id="pending-tasks">Pending Tasks: 0</p>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+**style.css:**
+```css
+body {
+    font-family: Arial, sans-serif;
+    background-color: #333;
+    color: #fff;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+header h2 {
+    font-size: 18px;
+    font-weight: normal;
+    margin-bottom: 20px;
+}
+
+main {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+button {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #444;
+}
+
+#task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#task-list li {
+    padding: 10px;
+    border-bottom: 1px solid #555;
+}
+
+#task-list li:last-child {
+    border-bottom: none;
+}
+
+#task-list li:hover {
+    background-color: #444;
+}
+
+#task-list li .checkbox {
+    margin-right: 10px;
+}
+
+#task-list li .delete-btn {
+    float: right;
+    margin-top: 5px;
+}
+
+#filters {
+    margin-top: 20px;
+}
+
+#filters button {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#filters button:hover {
+    background-color: #444;
+}
+
+#stats {
+    margin-top: 20px;
+}
+
+#stats p {
+    font-size: 18px;
+    font-weight: normal;
+}
+
+#stats p span {
+    font-weight: bold;
+}
+
+.favicon {
+    background-image: linear-gradient(to bottom, #6c5ce7, #4f86f7);
+    background-size: 100% 200%;
+    background-position: 0 100%;
+    transition: background-position 0.5s;
+}
+
+.favicon:hover {
+    background-position: 0 0;
+}
+```
+
+**script.js:**
+```javascript
+const taskInput = document.getElementById('task-input');
+const addTaskBtn = document.getElementById('add-task-btn');
+const taskList = document.getElementById('task-list');
+const filters = document.getElementById('filters');
+const allBtn = document.getElementById('all-btn');
+const activeBtn = document.getElementById('active-btn');
+const completedBtn = document.getElementById('completed-btn');
+const totalTasks = document.getElementById('total-tasks');
+const completedTasks = document.getElementById('completed-tasks');
+const pendingTasks = document.getElementById('pending-tasks');
+
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.classList.add('task-list-item');
+        li.innerHTML = `
+            <input type="checkbox" class="checkbox" id="task-${index}" ${task.completed ? 'checked' : ''}>
+            <label for="task-${index}">${task.text}</label>
+            <button class="delete-btn" onclick="deleteTask(${index})">Delete</button>
+        `;
+        taskList.appendChild(li);
+    });
+    updateStats();
+}
+
+function updateStats() {
+    totalTasks.textContent = `Total Tasks: ${tasks.length}`;
+    completedTasks.textContent = `Completed Tasks: ${tasks.filter(task => task.completed).length}`;
+    pendingTasks.textContent = `Pending Tasks: ${tasks.filter(task => !task.completed).length}`;
+}
+
+function addTask() {
+    const taskText = taskInput.value.trim();
+    if (taskText) {
+        tasks.push({ text: taskText, completed: false });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderTasks();
+        taskInput.value = '';
+    }
+}
+
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+}
+
+function filterTasks(filter) {
+    const filteredTasks = tasks.filter(task => {
+        if (filter === 'all') return true;
+        if (filter === 'active') return !task.completed;
+        if (filter === 'completed') return task.completed;
+    });
+    renderTasks(filteredTasks);
+}
+
+allBtn.addEventListener('click', () => filterTasks('all'));
+activeBtn.addEventListener('click', () => filterTasks('active'));
+completedBtn.addEventListener('click', () => filterTasks('completed'));
+
+addTaskBtn.addEventListener('click', addTask);
+
+taskInput.addEventListener('
